@@ -1,0 +1,67 @@
+# Introduction:
+
+Paperspace is a cloud provider that specialises in GPU enabled machines. It has a set of publicly available images including the (ML_in_a_Box) machines. these machines can be provisioned on multiple types of hardware, for example P4000, P5000, and P6000 machine types.
+the ML_in_a_Box image comes with preconfigured with Keras, Tensorflow, Tensorboard, Cuda, and other standard Machine Learning frameworks. But unfortunately that does not mean its ready to just plug and play our deeplearning-showcase project.
+in fact we ran into many problems that needed "not so easy" solutions sometimes.
+See the following blog post for more details : https://www.viaboxx.de/code/configuring-paperspace-ml-in-a-box-machine-to-run-a-deeplearning-showcase/
+
+
+# Problem description:
+
+the main problem is the compatibility between Tensorflow from one side, and Cude & CPU from the other side.
+it seems that the newest versions of Tensorflow are not compatible with either of these two. The solution that was most suitable in our case is reverting tensorflow and tensorflow-gpu to version 1.5, and revert Cuda to version 9.0
+and also update to the latest version of Dask.
+
+
+# list of possible Errors: (all solutions are found in the #Solutions# section
+
+- AttributeError: module 'pandas.core.computation' has no attribute 'expressions'
+    the reason for this error is an older version of Dask.
+
+
+- Illegal instruction (core dumped) :
+  CPU does not support AVX instructions.
+  (https://github.com/tensorflow/tensorflow/issues/17411)
+  (https://stackoverflow.com/questions/49094597/illegal-instruction-core-dumped-after-running-import-tensorflow)
+
+
+
+# Solution:
+
+- go through the README.md document, and make sure to run the (pip3 install -r requirements_paperspace.txt) command.
+
+
+- updgrade dask (Already done in requirements.txt):
+    pip install dask --upgrade
+    (https://github.com/pandas-dev/pandas/issues/18355)
+
+- uninstall tensorflow and tensorflow-gpu versions 1.8, and install 1.5 versions instead:(if running requirements_paperspace.txt didnt revert to tensorflow & tensorflow-gpu 1.5)
+    pip3 uninstall tensorflow
+    pip3 uninstall tensorflow-gpu
+    pip3 install tensorflow==1.5
+    pip3 install tensorflow-gpu==1.5
+
+- revert to Cuda 9.0 instead of Cude 9.1, instructions below are taken from this link (https://yangcha.github.io/CUDA90/):
+    sudo apt-get purge cuda
+    sudo apt-get purge libcudnn6
+    sudo apt-get purge libcudnn6-dev
+    wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64/cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
+    wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn7_7.0.5.15-1+cuda9.0_amd64.deb
+    wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libcudnn7-dev_7.0.5.15-1+cuda9.0_amd64.deb
+    wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl2_2.1.4-1+cuda9.0_amd64.deb
+    wget http://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl-dev_2.1.4-1+cuda9.0_amd64.deb
+    sudo dpkg -i cuda-repo-ubuntu1604_9.0.176-1_amd64.deb
+    sudo dpkg -i libcudnn7_7.0.5.15-1+cuda9.0_amd64.deb
+    sudo dpkg -i libcudnn7-dev_7.0.5.15-1+cuda9.0_amd64.deb
+    sudo dpkg -i libnccl2_2.1.4-1+cuda9.0_amd64.deb
+    sudo dpkg -i libnccl-dev_2.1.4-1+cuda9.0_amd64.deb
+    sudo apt-get update
+    sudo apt-get install cuda=9.0.176-1
+    sudo apt-get install libcudnn7-dev
+    sudo apt-get install libnccl-dev
+
+- Reboot the system to load the NVIDIA drivers.
+
+- Set up the development environment by modifying the PATH and LD_LIBRARY_PATH variables, also add them to the end of .bashrc file:
+  export PATH=/usr/local/cuda-9.0/bin${PATH:+:${PATH}}
+  export LD_LIBRARY_PATH=/usr/local/cuda-9.0/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
