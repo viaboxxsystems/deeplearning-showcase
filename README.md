@@ -55,7 +55,9 @@ After a restart you can select your Python Interpreter (Shift+Cmd+P -> "Python: 
 
 # Test Data
 
-use resources/prepare_data.sh script to configure the directories and download the training and validation data
+At first you will need to verify your kaggle account and accept the competition terms and conditions. Follow this link to do so (https://www.kaggle.com/c/dogs-vs-cats/rules).
+
+Then you can use resources/prepare_data.sh script to configure the directories and download the training and validation data
 ```
 ./resources/prepare_data.sh
 ```
