@@ -24,7 +24,7 @@ from keras.preprocessing.image import ImageDataGenerator
 
 FREEZE_LAYERS = 2  # freeze the first this many layers for training
 IMAGE_SIZE = (224, 224)
-DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S.%s"
+DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S"
 
 NUM_CLASSES = 2
 CLASS_LABEL = ["cat", "dog"]

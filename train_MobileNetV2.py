@@ -2,7 +2,7 @@
 from datetime import datetime
 from model import MobileNetV2, get_difference_in_seconds, append_row_to_csv
 
-DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S.%s"
+DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S"
 
 complete_run_time_details_file_name = "MobileNetV2_complete_run_timing_" + datetime.now().strftime(DEFAULT_DATE_TIME_FORMAT) + ".csv"
 complete_run_timing_file = "./trainingTiming/" + complete_run_time_details_file_name
