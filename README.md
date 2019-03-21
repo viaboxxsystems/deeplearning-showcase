@@ -1,15 +1,38 @@
 # deeplearning-showcase
 
-# To run on a GPU enabled machine 
-some special requirements are needed to run on a GPU machine (paperspace P5000). for that we use "requirements_paperspace.txt" file instead of "requirements.txt":
 
+## Installing Nvidia GPU related requirements
+
+- install Microsoft Visual Studio. (https://visualstudio.microsoft.com/downloads/)
+  donwload and install the community edition. When installing choose to install "Visual Studio Build Tools 2017" and "Visual Studio Community 2017" 
+
+- install Cuda Toolkit. (https://developer.nvidia.com/cuda-toolkit)
+  Be mindful of where it is installed. The directory has to be added in PATH variable later.
+  
+- install the drivers for your GPU (https://www.nvidia.com/Download/index.aspx)
+
+- Create an Nvidia developer profile, and download CuDNN (https://developer.nvidia.com/cudnn)
+  Download and extract the file in a known directory.
+
+- Setup PATH variable with the following entries
 ```
-pip3 install -r requirements_paperspace.txt
+<Path to cuda toolkit>\bin
+<Path to cuda toolkit>\libnvvp
+<Path to cuDNN>\bin
+# for example
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\bin
+C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.0\libnvvp
+C:\cuda\bin
+```  
+
+## Installing python requirements 
+install the requirements using the command:
+```
+pip3 install -r requirements.txt
 ```
 
-Also, we need to revert from Cuda 9.1 to Cuda 9.0. Please refer to "setting_up_paperspace_environment.txt" for step by step explanation.
 
-# Setup Keras & Tensorflow with Virtualenv
+## Setup Keras & Tensorflow with Virtualenv
 
 Install virtualenv via pip (make sure to use Python3 pip):
 
@@ -44,7 +67,7 @@ open ~/.keras/keras.json, for this project we are using tensorflow as backend, s
 }
 
     
-# Visual Studio Code and Virtualenv
+## Visual Studio Code and Virtualenv
 If you are using Virtual Studio Code you can configure the Editor to use the Virtualenv Python binary. To do this you first need to configure your Virtualenv Root folder with this user setting:
 
 ```json
@@ -53,7 +76,7 @@ If you are using Virtual Studio Code you can configure the Editor to use the Vir
 
 After a restart you can select your Python Interpreter (Shift+Cmd+P -> "Python: Select Interpreter" -> Select the interpreter in the deeplearning venv, e.g. ~/venv/deeplearn/bin/python). This allows VSCode to access the packages installed in the virtualenv and the editor will use the virtualenv for installing new packages.
 
-# Test Data
+## Test Data
 
 At first you will need to verify your kaggle account and accept the competition terms and conditions. Follow this link to do so (https://www.kaggle.com/c/dogs-vs-cats/rules).
 
@@ -61,7 +84,7 @@ Then you can use resources/prepare_data.sh script to configure the directories a
 ```
 ./resources/prepare_data.sh
 ```
-# Tensorboard
+## Tensorboard
 If you have tensorboard installed, you can view the visualisations metrics
 ```bash
 tensorboard --logdir=./tensorboard

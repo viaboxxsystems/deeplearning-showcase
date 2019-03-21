@@ -28,9 +28,9 @@ DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S"
 
 NUM_CLASSES = 2
 CLASS_LABEL = ["cat", "dog"]
-BATCH_SIZE = 8  # try reducing batch size or freeze more layers if your GPU runs out of memory
+BATCH_SIZE = 30  # try reducing batch size or freeze more layers if your GPU runs out of memory
 DATASET_PATH = './data/sample'
-NUM_EPOCHS = 1
+NUM_EPOCHS = 10
 
 
 def get_difference_in_seconds(t_start, t_end):
