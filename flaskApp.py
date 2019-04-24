@@ -22,7 +22,7 @@ IMAGE_SIZE = (224, 224, 3)
 net_models = dict()
 
 global graph, model
-graph = tf.get_default_graph()
+graph = tf.compat.v1.get_default_graph()
 
 
 def init_models():
