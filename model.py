@@ -140,7 +140,7 @@ class ResNet50(BaseModel):
         self.file_architecture = 'model_Resnet50_architecture.json'
 
         # todo: unused
-        self.per_epoch_log_dir = '/ResNet50/' + datetime.now().strftime(DEFAULT_DATE_TIME_FORMAT)
+        # self.per_epoch_log_dir = '/ResNet50/' + datetime.now().strftime(DEFAULT_DATE_TIME_FORMAT)
 
         self.per_epoch_metrics_file_name = "ResNet50_PerEpochMetrics_" + datetime.now().strftime(
             DEFAULT_DATE_TIME_FORMAT) + ".csv"
@@ -302,16 +302,11 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
         self.epoch_counter = 1
         self.previous_epoch_time = tstart
         # Make the original `TensorBoard` log to a subdirectory 'training'
-        training_log_dir = os.path.join(log_dir, 'training' + log_dir_postfix)
-        super(TrainValTensorBoard, self).__init__(training_log_dir, **kwargs)
+        # training_log_dir = os.path.join(log_dir, 'training' + log_dir_postfix)
+        super(TrainValTensorBoard, self).__init__(**kwargs)  # training_log_dir,
 
         self.acc = []
         self.loss = []
-        self.loss_epoch = tf.keras.metrics.Mean('train_loss', dtype=tf.float32)
-        self.accuracy_epoch = tf.keras.metrics.SparseCategoricalAccuracy('train_accuracy')
-        self.loss_batch = tf.keras.metrics.Mean('test_loss', dtype=tf.float32)
-        self.accuracy_batch = tf.keras.metrics.SparseCategoricalAccuracy('test_accuracy')
-
         # Log the validation metrics to a separate subdirectory
         self.val_log_dir = os.path.join(log_dir, 'validation' + log_dir_postfix)
 
@@ -336,10 +331,6 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
         for name, value in val_logs.items():
             with self.val_writer.as_default():
                 tf.summary.scalar(name, value.item(), epoch)
-            # summary = tf.compat.v1.Summary()
-            # summary_value = summary.value.add()
-            # summary_value.simple_value = value.item()
-            # summary_value.tag = name
             row.append(value)
         self.val_writer.flush()
         append_row_to_csv(self.per_epoch_metrics_file, row)
@@ -379,16 +370,9 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
                     self.loss.append(value)
                 if name is 'accuracy':
                     self.acc.append(value)
-
-                # summary = tf.compat.v1.Summary()
-                # summary_value = summary.value.add()
-                # summary_value.simple_value = value.item()
-                # summary_value.tag = name
                 with self.val_writer.as_default():
                     tf.summary.scalar(name, value.item(), batch)
-
                 row.append(str(value))
-            #                self.val_writer.add_summary(summary, self.seen)
 
             if float(len(self.loss)) != 0:
                 row.append(round(sum(self.loss) / float(len(self.loss)), 4))
