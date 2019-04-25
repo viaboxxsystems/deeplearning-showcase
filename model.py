@@ -5,23 +5,6 @@ from abc import ABC
 import csv
 
 import tensorflow as tf
-import tensorboard as tb
-
-# from keras.applications import ResNet50 as RN
-# from keras.applications.inception_resnet_v2 import InceptionResNetV2 as IRNV2
-# from keras.applications.inception_v3 import InceptionV3 as INS3
-# from keras.applications.mobilenet import MobileNet as MOB
-# from keras.applications.mobilenetv2 import MobileNetV2 as MOBv2
-# from keras.applications.densenet import DenseNet121 as DENS121
-# from keras.applications.densenet import DenseNet169 as DENS169
-# from keras.applications.densenet import DenseNet201 as DENS201
-#
-# from keras.callbacks import ModelCheckpoint, TensorBoard
-# from keras.models import Model
-# from keras.layers import Flatten, Dense, Dropout
-# from keras.optimizers import Adam
-#
-# from keras.preprocessing.image import ImageDataGenerator
 
 FREEZE_LAYERS = 2  # freeze the first this many layers for training
 IMAGE_SIZE = (224, 224)
@@ -120,16 +103,12 @@ class BaseModel(ABC):
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(self.file_checkpoints, monitor='val_acc', verbose=1, save_best_only=True,
                                                                  mode='max')
 
-        # Configure Tensorboard Callback
-        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir='./tensorboard', histogram_freq=0, write_graph=True,
-                                                              write_images=False)
-
         self.model.fit_generator(training,
                                  steps_per_epoch=training.samples // batch_size,
                                  validation_data=validation,
                                  validation_steps=validation.samples // batch_size,
                                  epochs=epochs,
-                                 callbacks=[checkpoint_callback, tensorboard_callback, tensorboard_metrics_callback])
+                                 callbacks=[checkpoint_callback, tensorboard_metrics_callback])
 
 
 class ResNet50(BaseModel):
@@ -302,17 +281,18 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
         self.epoch_counter = 1
         self.previous_epoch_time = tstart
         # Make the original `TensorBoard` log to a subdirectory 'training'
-        # training_log_dir = os.path.join(log_dir, 'training' + log_dir_postfix)
-        super(TrainValTensorBoard, self).__init__(**kwargs)  # training_log_dir,
+        super(TrainValTensorBoard, self).__init__(**kwargs)
 
         self.acc = []
         self.loss = []
         # Log the validation metrics to a separate subdirectory
         self.val_log_dir = os.path.join(log_dir, 'validation' + log_dir_postfix)
+        self.train_log_dir = os.path.join(log_dir, 'training' + log_dir_postfix)
 
     def set_model(self, model):
         # Setup writer for validation metrics
         self.val_writer = tf.summary.create_file_writer(self.val_log_dir)
+        self.train_writer = tf.summary.create_file_writer(self.train_log_dir)
         super(TrainValTensorBoard, self).set_model(model)
 
     def on_epoch_end(self, epoch, logs=None):
@@ -332,7 +312,7 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
             with self.val_writer.as_default():
                 tf.summary.scalar(name, value.item(), epoch)
             row.append(value)
-        self.val_writer.flush()
+        self.train_writer.flush()
         append_row_to_csv(self.per_epoch_metrics_file, row)
         # Pass the remaining logs to `TensorBoard.on_epoch_end`
         logs = {k: v for k, v in logs.items() if not k.startswith('val_')}
@@ -340,12 +320,9 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
 
     def on_train_end(self, logs=None):
         super(TrainValTensorBoard, self).on_train_end(logs)
-        self.val_writer.close()
+        self.train_writer.close()
 
     def on_epoch_begin(self, epoch, logs=None):
-        self.seen = 0
-        self.totals = {}
-        self.write_batch_performance = True
         self.batch_counter = 1
 
         header_batch = ["Epoch Number", "Batch Number", "Loss", "Accuracy", "Average Loss", "Average Accuracy"]
@@ -357,34 +334,31 @@ class TrainValTensorBoard(tf.keras.callbacks.TensorBoard):
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
 
-        if self.write_batch_performance:
+        # if self.write_batch_performance:
+        row = []
+        row.append(str(self.epoch_counter))
+        row.append(str(self.batch_counter))
 
-            row = []
-            row.append(str(self.epoch_counter))
-            row.append(str(self.batch_counter))
+        for name, value in logs.items():
+            if name in ['batch', 'size']:
+                continue
+            if name is 'loss':
+                self.loss.append(value)
+            if name is 'accuracy':
+                self.acc.append(value)
+            with self.train_writer.as_default():
+                tf.summary.scalar(name, value.item(), batch)
+            row.append(str(value))
 
-            for name, value in logs.items():
-                if name in ['batch', 'size']:
-                    continue
-                if name is 'loss':
-                    self.loss.append(value)
-                if name is 'accuracy':
-                    self.acc.append(value)
-                with self.val_writer.as_default():
-                    tf.summary.scalar(name, value.item(), batch)
-                row.append(str(value))
+        if float(len(self.loss)) != 0:
+            row.append(round(sum(self.loss) / float(len(self.loss)), 4))
 
-            if float(len(self.loss)) != 0:
-                row.append(round(sum(self.loss) / float(len(self.loss)), 4))
+        if float(len(self.acc)) != 0:
+            row.append(round(sum(self.acc) / float(len(self.acc)), 4))
 
-            if float(len(self.acc)) != 0:
-                row.append(round(sum(self.acc) / float(len(self.acc)), 4))
+        append_row_to_csv(self.per_batch_metrics_file, row)
 
-            append_row_to_csv(self.per_batch_metrics_file, row)
+        self.train_writer.flush()
 
-            self.val_writer.flush()
-
-            self.batch_counter = self.batch_counter + 1
-            self.epoch_counter = self.epoch_counter + 1
-
-        self.seen += BATCH_SIZE
+        self.batch_counter = self.batch_counter + 1
+        self.epoch_counter = self.epoch_counter + 1
