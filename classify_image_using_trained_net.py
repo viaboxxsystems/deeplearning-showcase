@@ -1,9 +1,10 @@
 #!/usr/bin/python
+import tensorflow as tf
 from argparse import ArgumentParser
-from keras.models import model_from_json
+# from  import model_from_json
 import numpy as np
 from model import *
-from keras.preprocessing import image as kerasImage
+# from keras.preprocessing import image as kerasImage
 import logging
 from datetime import datetime
 
@@ -14,23 +15,24 @@ header = ["Start Time", "End Time", "Duration (s)"]
 header2 = ["Image Name", "Category", "Percentage"]
 append_row_to_csv(classification_results, header2)
 
-logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s - %(message)s', )
-#  format= '[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
 logger = logging.getLogger(__name__)
+logging.basicConfig()
+logger = logging.getLogger("classify_image_using_trained_net")
+logger.setLevel(logging.INFO)
 
 
 def runCNN(cnn_name, image):
     logger.info('Running Against {} neural network'.format(cnn_name))
 
     with open('model_' + cnn_name + '_architecture.json', 'r') as f:
-        net_model = model_from_json(f.read())
+        net_model = tf.keras.models.model_from_json(f.read())
     logger.info('Loaded model')
     net_model.load_weights('model-' + cnn_name + '-final.h5')
     logger.info('Loaded weights')
 
     # preprocess input
-    raw_image = kerasImage.load_img(image, target_size=IMAGE_SIZE)
-    x = kerasImage.img_to_array(raw_image)
+    raw_image = tf.keras.preprocessing.image.load_img(image, target_size=IMAGE_SIZE)
+    x = tf.keras.preprocessing.image.img_to_array(raw_image)
     x = np.expand_dims(x, axis=0)
     post_processed_input_images = np.vstack([x])
 

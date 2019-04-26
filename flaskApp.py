@@ -2,30 +2,34 @@
 import base64
 import io
 
-import tensorflow as tf
 from PIL import Image
 import numpy as np
 from model import *
 import logging
 from datetime import datetime
-from flask import Flask, request, Response, jsonify, flash, redirect
+from flask import Flask, request, jsonify, flash, redirect
+import tensorflow as tf
 
-logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s - %(message)s', )
 logger = logging.getLogger(__name__)
+logging.basicConfig()
+logger = logging.getLogger("flask_app")
+logger.setLevel(logging.INFO)
+
 DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S.%s"
 header = ["Start Time", "End Time", "Duration (s)"]
 IMAGE_SIZE = (224, 224, 3)
 net_models = dict()
 
-global graph
+global graph, model
 graph = tf.compat.v1.get_default_graph()
+#tf.compat.v1.disable_eager_execution()
 
 
 def init_models():
-    models = [
-        'InceptionV3']  # 'MobileNet', 'MobileNetV2', 'ResNet50', 'DenseNet121', 'DenseNet169', 'DenseNet201', 'InceptionV3', 'InceptionResNetV2',
-    print('Loading all models...')
-    print(models)
+    models = ['MobileNet']
+    # 'InceptionV3', 'MobileNetV2', 'ResNet50', 'DenseNet121', 'DenseNet169', 'DenseNet201', 'InceptionV3', 'InceptionResNetV2',
+    logger.info('Loading all models...')
+    logger.debug(models)
 
     for model_name in models:
         if model_name.startswith("Mobile"):
@@ -33,11 +37,11 @@ def init_models():
                 net_models[model_name] = load_model(model_name)
         else:
             net_models[model_name] = load_model(model_name)
-        print('Loaded model and weights for ' + model_name)
+        logger.info('Loaded model and weights for ' + model_name)
+    logger.info('all models loaded!')
 
 
 def predict(cnn_name, image):
-    # preprocess input
     with graph.as_default():
         resized_image = np.ma.resize(image, IMAGE_SIZE)
         x = tf.keras.preprocessing.image.img_to_array(resized_image)
@@ -45,19 +49,17 @@ def predict(cnn_name, image):
         post_processed_input_images = np.vstack([x])
 
         # predict output
-        net_models[cnn_name]._make_predict_function()
+        logger.warning(net_models)
+        logger.warning(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
         output_probability = net_models[cnn_name].predict(post_processed_input_images)
         output_classes = output_probability.argmax(axis=-1)
-
     return output_classes[0], output_probability[0].tolist()
 
 
 def load_model(model_name: str):
-    # net_model = tf.keras.models.load_model("model-" + model_name + '-final.h5old')
     with open('model_' + model_name + '_architecture.json', 'r') as f:
         net_model = tf.keras.models.model_from_json(f.read())
     net_model.load_weights('model-' + model_name + '-final.h5')
-    net_model._make_predict_function()
     return net_model
 
 
