@@ -13,37 +13,41 @@ from datetime import datetime
 import tensorflow as tf
 import keras
 from flask import Flask, request, Response, jsonify, flash, redirect
+from tensorflow.python.keras.backend import set_session
 
-logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s - %(message)s', )
-logger = logging.getLogger(__name__)
+logging.basicConfig()
+logger = logging.getLogger("cat-dog-classifier")
+logger.setLevel(logging.INFO)
+
 DEFAULT_DATE_TIME_FORMAT = "%Y%m%d-%H%M%S.%s"
 header = ["Start Time", "End Time", "Duration (s)"]
 IMAGE_SIZE = (224, 224, 3)
 net_models = dict()
 
-global graph, model
+global model
 graph = tf.get_default_graph()
 
 
 def init_models():
     models = ['MobileNet', 'MobileNetV2', 'ResNet50', 'DenseNet121', 'DenseNet169', 'DenseNet201', 'InceptionV3',
-              'InceptionResNetV2', 'InceptionV3']
-    filtered_models = [value for value in models if not value.startswith("Mobile")]
+              'InceptionResNetV2']
+    # filtered_models = [value for value in models if not value.startswith("Mobile")]
     # added 123123 to not filter MobileNet and MobileNetV2
 
     print('Loading all models...')
-    print(filtered_models)
+    print(models)
 
-    for model_name in filtered_models:
+    for model_name in models:
         if model_name.startswith("Mobile"):
             logger.info('Loaded model' + model_name)
             with CustomObjectScope({'relu6': keras.layers.ReLU(6.), 'DepthwiseConv2D':
                 keras.layers.DepthwiseConv2D}):
                 net_models[model_name] = load_model(model_name)
         else:
-            logger.info('Loaded model' + model_name)
+            logger.info('Loaded model ' + model_name)
             net_models[model_name] = load_model(model_name)
         logger.info('Loaded weights for ' + model_name)
+    logger.info("All Models Loaded")
 
 
 def predict(cnn_name, image):
