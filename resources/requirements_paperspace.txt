@@ -40,4 +40,4 @@ Werkzeug==0.14.1
 wrapt==1.10.11
 tensorflow==1.5
 tensorflow-gpu==1.5
-dask==0.18.1
+dask==2021.10.0
